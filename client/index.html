@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instant Match</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <script defer src="script.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: white;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    #questionBox {
+      background-color: #ffffffcc;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      transition: all 0.3s ease-in-out;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    #question {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    #answerInput,
+    #answerSelect {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      outline: none;
+      margin-bottom: 20px;
+      transition: border 0.3s;
+    }
+
+    #answerInput:focus,
+    #answerSelect:focus {
+      border-color: #6c63ff;
+    }
+
+    button {
+      background: #6c63ff;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #5848c2;
+    }
+
+    #matchResult {
+      margin-top: 30px;
+      text-align: center;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 480px) {
+      #questionBox {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Instant Match 💞</h1>
+
+  <div id="questionBox">
+    <p id="question">What's your name?</p>
+    <input type="text" id="answerInput" />
+    <select id="answerSelect" style="display: none;"></select>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+
+  <div id="matchResult">
+   
+
+  </div>
+</body>
+</html>
