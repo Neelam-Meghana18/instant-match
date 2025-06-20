@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
   <title>Chat Room</title>
@@ -62,6 +62,181 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
   }
 </script>
 <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Instant Match Chat 💬</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: slideBg 20s infinite linear;
+    }
+
+    @keyframes slideBg {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #chatBox {
+      background: #ffffffcc;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      width: 90%;
+      max-width: 600px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    #messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 15px;
+      background-color: #fff;
+      margin-bottom: 15px;
+    }
+
+    .msg {
+      margin: 10px 0;
+      padding: 10px 14px;
+      border-radius: 15px;
+      max-width: 70%;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .me {
+      background: #6c63ff;
+      color: white;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .them {
+      background: #e0e0e0;
+      color: #333;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #msgInput {
+      width: calc(100% - 90px);
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    #sendBtn {
+      padding: 12px 16px;
+      background-color: #6c63ff;
+      border: none;
+      color: white;
+      font-weight: 600;
+      border-radius: 10px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+
+    #sendBtn:hover {
+      background-color: #574fd6;
+    }
+
+    .chat-input {
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+<div id="chatBox">
+  <h2>💞 Chat with your match</h2>
+  <div id="messages"></div>
+  <div class="chat-input">
+    <input type="text" id="msgInput" placeholder="Type your message... 😊❤️🔥" />
+    <button id="sendBtn" onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+  const yourName = localStorage.getItem("yourName");
+  const matchedName = localStorage.getItem("matchedName");
+  const messagesDiv = document.getElementById("messages");
+
+  if (!yourName || !matchedName) {
+    alert("Missing chat info. Please restart from the beginning.");
+    location.href = "index.html";
+  }
+
+  const channelName = [yourName, matchedName].sort().join("_");
+
+  const pusher = new Pusher('8685cf11979ffbaa7ea6', {
+    cluster: 'ap2',
+    encrypted: true
+  });
+
+  const channel = pusher.subscribe(channelName);
+
+  channel.bind('new_message', function (data) {
+    const isMine = data.sender === yourName;
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "msg " + (isMine ? "me" : "them");
+    msgDiv.innerText = `${data.sender}: ${data.message}`;
+    messagesDiv.appendChild(msgDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+
+  function sendMessage() {
+    const message = document.getElementById("msgInput").value.trim();
+    if (!message) return;
+
+    fetch("https://instant-match.onrender.com/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: yourName,
+        receiver: matchedName,
+        message
+      })
+    });
+
+    document.getElementById("msgInput").value = "";
+  }
+</script>
 
 </body>
 </html>
