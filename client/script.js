@@ -76,7 +76,7 @@ function nextQuestion() {
 }
 
 function sendForMatch() {
-  fetch("http://localhost:5000/match", {
+  fetch("https://instant-match.onrender.com/match", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(answers)
@@ -99,7 +99,7 @@ function waitForMatch() {
   if (pollingInterval) clearInterval(pollingInterval); // Avoid duplicate intervals
 
   pollingInterval = setInterval(() => {
-    fetch(`http://localhost:5000/check-match?name=${answers.name}`)
+    fetch(`https://instant-match.onrender.com/check-match?name==${answers.name}`)
       .then(res => res.json())
       .then(data => {
         if (data && !data.error) {

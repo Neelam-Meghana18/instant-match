@@ -80,7 +80,8 @@
   const username = urlParams.get('name');
   const partner = urlParams.get('partner');
 
-  const socket = io("http://localhost:5000");
+  const socket = io("https://instant-match.onrender.com");
+
 
   socket.on("connect", () => {
     console.log("✅ Connected to server");
