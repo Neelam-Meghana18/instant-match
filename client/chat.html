@@ -28,10 +28,11 @@
   const channelName = [yourName, matchedName].sort().join("_");
 
   // Connect to Pusher
-  const pusher = new Pusher('YOUR_PUSHER_KEY', {
-    cluster: 'YOUR_CLUSTER',
-    encrypted: true
-  });
+const pusher = new Pusher('8685cf11979ffbaa7ea6', {
+  cluster: 'ap2',
+  encrypted: true
+});
+
 
   const channel = pusher.subscribe(channelName);
 
