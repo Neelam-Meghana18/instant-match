@@ -17,7 +17,6 @@ const questions = [
   }
 ];
 
-// Load first question
 window.onload = renderQuestion;
 
 function renderQuestion() {
@@ -79,14 +78,18 @@ function sendForMatch() {
   fetch("https://instant-match.onrender.com/match", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(answers)
+    body: JSON.stringify({
+      username: answers.name,
+      issue: answers.issue,
+      language: answers.language
+    })
   })
     .then(res => res.json())
     .then(data => {
-      if (data && data.error) {
-        waitForMatch();
-      } else {
+      if (data && data.matched === true) {
         showMatch(data);
+      } else {
+        waitForMatch();
       }
     })
     .catch(err => {
@@ -96,19 +99,19 @@ function sendForMatch() {
 }
 
 function waitForMatch() {
-  if (pollingInterval) clearInterval(pollingInterval); // Avoid duplicate intervals
+  if (pollingInterval) clearInterval(pollingInterval);
 
   pollingInterval = setInterval(() => {
-    fetch(`https://instant-match.onrender.com/check-match?name==${answers.name}`)
+    fetch(`https://instant-match.onrender.com/check-match?name=${answers.name}`)
       .then(res => res.json())
       .then(data => {
-        if (data && !data.error) {
+        if (data && data.name) {
           clearInterval(pollingInterval);
           showMatch(data);
         }
       })
       .catch(() => {
-        // silently ignore errors
+        // silent fail
       });
   }, 3000);
 }
@@ -120,8 +123,7 @@ function showMatch(match) {
   const matchBox = document.getElementById("matchResult");
   matchBox.style.display = "block";
 
-  // Save names for chat page
-  localStorage.setItem("matchedName", match.name);
+  localStorage.setItem("matchedName", match.name); // partner's name
   localStorage.setItem("yourName", answers.name);
 
   matchBox.innerHTML = `
