@@ -163,16 +163,145 @@
 # if __name__ == '__main__':
 #     socketio.run(app, debug=True, port=5000)
 
-from flask import Flask, render_template, request
+# from flask import Flask, render_template, request
+# from flask_socketio import SocketIO, emit, join_room
+# from flask_cors import CORS
+# import uuid
+
+# app = Flask(__name__)
+# CORS(app)
+# socketio = SocketIO(app, cors_allowed_origins="*")
+
+# # In-memory user store (temporary)
+# waiting_users = []
+# active_rooms = {}
+
+# @app.route('/')
+# def index():
+#     return "Instant Match Server is running"
+
+# # Helper to create room name
+# def get_room_name(user1, user2):
+#     if not user1 or not user2:
+#         print("Error: Missing user1 or user2 in get_room_name")
+#         return None
+#     return '_'.join(sorted([user1, user2]))
+
+# # Handle user match request
+# @app.route('/match', methods=['POST'])
+# def match():
+#     data = request.json
+
+#     # Safely extract and clean input
+#     username = data.get('username', '').strip()
+#     issue = data.get('issue', '').strip().lower()
+#     language = data.get('language', '').strip().lower()
+
+#     # ✅ Validation
+#     if not username or not issue or not language:
+#         print("❌ Invalid match request: missing fields.")
+#         return {
+#             "matched": False,
+#             "error": "All fields (username, issue, language) are required."
+#         }, 400
+
+#     print(f"📥 Received match request: {username} | {issue} | {language}")
+
+#     # 🔍 Try to find a matching user
+#     for i, user in enumerate(waiting_users):
+#         if user['issue'] == issue and user['language'] == language:
+#             partner = waiting_users.pop(i)
+#             room = get_room_name(username, partner['username'])
+
+#             if room:
+#                 active_rooms[room] = [username, partner['username']]
+#                 print(f"✅ Match found: {username} ↔ {partner['username']} in room {room}")
+#                 return {
+#                     "matched": True,
+#                     "room": room,
+#                     "partner": partner['username']
+#                 }
+
+#     # 🕒 No match — add to waiting list
+#     waiting_users.append({
+#         "username": username,
+#         "issue": issue,
+#         "language": language
+#     })
+
+#     print(f"⏳ No match found for {username}, added to waiting_users.")
+#     return {"matched": False}
+
+# @app.route('/check-match', methods=['GET'])
+# def check_match():
+#     username = request.args.get('name')
+#     print(f"Checking match for: {username}")
+
+#     for room, users in active_rooms.items():
+#         if username in users:
+#             partner = users[1] if users[0] == username else users[0]
+#             return {
+#                 "matched": True,
+#                 "room": room,
+#                 "name": partner
+#             }
+
+#     return {
+#         "matched": False
+#     }, 404
+
+
+# # Handle client joining chat room
+# @socketio.on('join')
+# def handle_join(data):
+#     username = data.get('username')
+#     partner = data.get('partner')
+
+#     print(f"[JOIN] {username} wants to join with {partner}")
+
+#     room = get_room_name(username, partner)
+#     if room:
+#         join_room(room)
+#         emit('chat_message', {
+#             "sender": "System",
+#             "message": f"{username} joined the chat."
+#         }, room=room)
+#     else:
+#         print("Error: Room could not be created because username or partner is missing")
+
+# # Handle chat message
+# @socketio.on('send_message')
+# def handle_message(data):
+#     username = data.get('username')
+#     partner = data.get('partner')
+#     message = data.get('message')
+
+#     room = get_room_name(username, partner)
+#     if room:
+#         print(f"[MESSAGE] {username} to {partner}: {message}")
+#         emit('chat_message', {
+#             "sender": username,
+#             "message": message
+#         }, room=room)
+#     else:
+#         print("Error: Cannot send message, room is None")
+
+# # Main entry
+# if __name__ == '__main__':
+#     from os import getenv
+#     app.run(host="0.0.0.0", port=int(getenv("PORT", 5000)))
+
+
+
+from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit, join_room
 from flask_cors import CORS
-import uuid
 
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# In-memory user store (temporary)
+# In-memory user store
 waiting_users = []
 active_rooms = {}
 
@@ -180,49 +309,49 @@ active_rooms = {}
 def index():
     return "Instant Match Server is running"
 
-# Helper to create room name
+# Helper to generate room name
 def get_room_name(user1, user2):
     if not user1 or not user2:
         print("Error: Missing user1 or user2 in get_room_name")
         return None
     return '_'.join(sorted([user1, user2]))
 
-# Handle user match request
+# Match endpoint
 @app.route('/match', methods=['POST'])
 def match():
     data = request.json
 
-    # Safely extract and clean input
+    # Extract and validate input
     username = data.get('username', '').strip()
     issue = data.get('issue', '').strip().lower()
     language = data.get('language', '').strip().lower()
 
-    # ✅ Validation
     if not username or not issue or not language:
         print("❌ Invalid match request: missing fields.")
-        return {
+        return jsonify({
             "matched": False,
             "error": "All fields (username, issue, language) are required."
-        }, 400
+        }), 400
 
     print(f"📥 Received match request: {username} | {issue} | {language}")
 
-    # 🔍 Try to find a matching user
+    # Try to find a compatible waiting user
     for i, user in enumerate(waiting_users):
-        if user['issue'] == issue and user['language'] == language:
+        if user['issue'] == issue and user['language'] == language and user['username'] != username:
             partner = waiting_users.pop(i)
             room = get_room_name(username, partner['username'])
 
             if room:
                 active_rooms[room] = [username, partner['username']]
                 print(f"✅ Match found: {username} ↔ {partner['username']} in room {room}")
-                return {
+                return jsonify({
                     "matched": True,
                     "room": room,
-                    "partner": partner['username']
-                }
+                    "partner": partner['username'],
+                    "name": username  # Include own name to avoid 'undefined' in frontend
+                })
 
-    # 🕒 No match — add to waiting list
+    # No match found, add to waiting list
     waiting_users.append({
         "username": username,
         "issue": issue,
@@ -230,34 +359,32 @@ def match():
     })
 
     print(f"⏳ No match found for {username}, added to waiting_users.")
-    return {"matched": False}
+    return jsonify({"matched": False})
 
+# Check if user got matched
 @app.route('/check-match', methods=['GET'])
 def check_match():
     username = request.args.get('name')
-    print(f"Checking match for: {username}")
+    print(f"🔍 Checking match for: {username}")
 
     for room, users in active_rooms.items():
         if username in users:
             partner = users[1] if users[0] == username else users[0]
-            return {
+            return jsonify({
                 "matched": True,
                 "room": room,
                 "name": partner
-            }
+            })
 
-    return {
-        "matched": False
-    }, 404
+    return jsonify({"matched": False}), 404
 
-
-# Handle client joining chat room
+# Socket.IO Events
 @socketio.on('join')
 def handle_join(data):
     username = data.get('username')
     partner = data.get('partner')
 
-    print(f"[JOIN] {username} wants to join with {partner}")
+    print(f"[JOIN] {username} joining chat with {partner}")
 
     room = get_room_name(username, partner)
     if room:
@@ -267,27 +394,25 @@ def handle_join(data):
             "message": f"{username} joined the chat."
         }, room=room)
     else:
-        print("Error: Room could not be created because username or partner is missing")
+        print("⚠️ Error: Room creation failed.")
 
-# Handle chat message
 @socketio.on('send_message')
-def handle_message(data):
+def handle_send_message(data):
     username = data.get('username')
     partner = data.get('partner')
     message = data.get('message')
 
     room = get_room_name(username, partner)
     if room:
-        print(f"[MESSAGE] {username} to {partner}: {message}")
+        print(f"[MESSAGE] {username} → {partner}: {message}")
         emit('chat_message', {
             "sender": username,
             "message": message
         }, room=room)
     else:
-        print("Error: Cannot send message, room is None")
+        print("⚠️ Error: Cannot send message, room is None")
 
-# Main entry
+# Run the server
 if __name__ == '__main__':
     from os import getenv
-    app.run(host="0.0.0.0", port=int(getenv("PORT", 5000)))
-
+    socketio.run(app, host="0.0.0.0", port=int(getenv("PORT", 5000)))
