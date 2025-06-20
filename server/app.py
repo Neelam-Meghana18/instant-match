@@ -232,6 +232,23 @@ def match():
     print(f"⏳ No match found for {username}, added to waiting_users.")
     return {"matched": False}
 
+@app.route('/check-match', methods=['GET'])
+def check_match():
+    username = request.args.get('name')
+    print(f"Checking match for: {username}")
+
+    for room, users in active_rooms.items():
+        if username in users:
+            partner = users[1] if users[0] == username else users[0]
+            return {
+                "matched": True,
+                "room": room,
+                "name": partner
+            }
+
+    return {
+        "matched": False
+    }, 404
 
 
 # Handle client joining chat room
