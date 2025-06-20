@@ -115,6 +115,23 @@ function waitForMatch() {
       });
   }, 3000);
 }
+@app.route('/check-match', methods=['GET'])
+def check_match():
+    username = request.args.get('name')
+    print(f"[CHECK] Looking for match for {username}")
+
+    for room, users in active_rooms.items():
+        if username in users:
+            partner = users[0] if users[1] == username else users[1]
+            return {
+                "matched": True,
+                "room": room,
+                "name": partner
+            }
+
+    return {
+        "matched": False
+    }, 404
 
 function showMatch(match) {
   const box = document.getElementById("questionBox");
