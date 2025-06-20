@@ -191,13 +191,23 @@ def get_room_name(user1, user2):
 @app.route('/match', methods=['POST'])
 def match():
     data = request.json
-    username = data.get('username')
-    issue = data.get('issue')
-    language = data.get('language')
 
-    print(f"Received match request: {username} | {issue} | {language}")
+    # Safely extract and clean input
+    username = data.get('username', '').strip()
+    issue = data.get('issue', '').strip().lower()
+    language = data.get('language', '').strip().lower()
 
-    # Try to find a match
+    # ✅ Validation
+    if not username or not issue or not language:
+        print("❌ Invalid match request: missing fields.")
+        return {
+            "matched": False,
+            "error": "All fields (username, issue, language) are required."
+        }, 400
+
+    print(f"📥 Received match request: {username} | {issue} | {language}")
+
+    # 🔍 Try to find a matching user
     for i, user in enumerate(waiting_users):
         if user['issue'] == issue and user['language'] == language:
             partner = waiting_users.pop(i)
@@ -205,22 +215,24 @@ def match():
 
             if room:
                 active_rooms[room] = [username, partner['username']]
+                print(f"✅ Match found: {username} ↔ {partner['username']} in room {room}")
                 return {
                     "matched": True,
                     "room": room,
                     "partner": partner['username']
                 }
 
-    # If no match, add user to waiting list
+    # 🕒 No match — add to waiting list
     waiting_users.append({
         "username": username,
         "issue": issue,
         "language": language
     })
 
-    return {
-        "matched": False
-    }
+    print(f"⏳ No match found for {username}, added to waiting_users.")
+    return {"matched": False}
+
+
 
 # Handle client joining chat room
 @socketio.on('join')
