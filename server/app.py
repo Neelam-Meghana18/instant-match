@@ -290,140 +290,78 @@
 # if __name__ == '__main__':
 #     from os import getenv
 #     app.run(host="0.0.0.0", port=int(getenv("PORT", 5000)))
-
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import sqlite3
 
 app = Flask(__name__)
 CORS(app)
 
-DB_PATH = '../db/users.db'
+# In-memory match tracking
+waiting_users = []
+active_rooms = {}
 
-waiting_users = []  # List of users waiting to be matched
-matched_users = {}  # Dict of name → match info
+@app.route('/')
+def index():
+    return "💡 Instant Match Server is running (no sockets)"
 
+def get_room_name(user1, user2):
+    return '_'.join(sorted([user1, user2]))
 
 @app.route('/match', methods=['POST'])
 def match():
-    try:
-        data = request.get_json()
-        name = data.get('name', '').strip()
-        age = data.get('age')
-        issue = data.get('issue', '').strip().lower()
-        language = data.get('language', '').strip().lower()
+    data = request.json
 
-        if not name or not issue or not language:
-            return jsonify({"error": "Missing required fields"}), 400
+    username = data.get('username', '').strip()
+    issue = data.get('issue', '').strip().lower()
+    language = data.get('language', '').strip().lower()
 
-        # Save user to DB
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('INSERT INTO users (name, age, issue, language) VALUES (?, ?, ?, ?)',
-                  (name, age, issue, language))
-        conn.commit()
-        conn.close()
+    if not username or not issue or not language:
+        return jsonify({
+            "matched": False,
+            "error": "All fields (username, issue, language) are required"
+        }), 400
 
-        # Check if there's a matching user
-        for i, user in enumerate(waiting_users):
-            if (
-                user['issue'] == issue and
-                user['language'] == language and
-                user['name'] != name
-            ):
-                matched_user = waiting_users.pop(i)
+    print(f"📥 Match request: {username}, {issue}, {language}")
 
-                # Save match for both users
-                matched_users[name] = {
-                    "name": matched_user['name'],
-                    "age": matched_user['age'],
-                    "issue": matched_user['issue'],
-                    "language": matched_user['language'],
-                    "photo": "👤"
-                }
+    for i, user in enumerate(waiting_users):
+        if user['issue'] == issue and user['language'] == language and user['username'] != username:
+            partner = waiting_users.pop(i)
+            room = get_room_name(username, partner['username'])
 
-                matched_users[matched_user['name']] = {
-                    "name": name,
-                    "age": age,
-                    "issue": issue,
-                    "language": language,
-                    "photo": "👤"
-                }
+            active_rooms[username] = {
+                "matched": True,
+                "room": room,
+                "name": partner['username']
+            }
+            active_rooms[partner['username']] = {
+                "matched": True,
+                "room": room,
+                "name": username
+            }
 
-                print(f"✅ Match found: {name} ↔ {matched_user['name']}")
-                return jsonify(matched_users[name])
+            print(f"✅ Match made: {username} ↔ {partner['username']} in room {room}")
+            return jsonify(active_rooms[username])
 
-        # If no match found, add to waiting list
-        waiting_users.append({
-            "name": name,
-            "age": age,
-            "issue": issue,
-            "language": language
-        })
+    # No match found
+    waiting_users.append({
+        "username": username,
+        "issue": issue,
+        "language": language
+    })
 
-        print(f"⏳ Added {name} to waiting_users")
-        return jsonify({"error": "No match found yet, waiting..."})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+    print(f"⏳ {username} added to waiting_users")
+    return jsonify({"matched": False})
 
 @app.route('/check-match', methods=['GET'])
 def check_match():
-    name = request.args.get('name', '').strip()
-    if not name:
-        return jsonify({"error": "Name required"}), 400
+    username = request.args.get('name', '').strip()
+    print(f"🔍 Checking for match: {username}")
 
-    if name in matched_users:
-        return jsonify(matched_users[name])
-    else:
-        return jsonify({"error": "Still waiting..."}), 404
+    if username in active_rooms:
+        return jsonify(active_rooms[username])
 
-
-@app.route('/send', methods=['POST'])
-def send_message():
-    data = request.get_json()
-    sender = data.get("sender")
-    receiver = data.get("receiver")
-    message = data.get("message")
-
-    if not sender or not receiver or not message:
-        return jsonify({"error": "All fields required"}), 400
-
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("INSERT INTO messages (sender, receiver, message) VALUES (?, ?, ?)",
-              (sender, receiver, message))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"success": True})
-
-
-@app.route('/messages', methods=['GET'])
-def get_messages():
-    sender = request.args.get('sender')
-    receiver = request.args.get('receiver')
-
-    if not sender or not receiver:
-        return jsonify({"error": "Sender and receiver required"}), 400
-
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''
-        SELECT sender, receiver, message, timestamp 
-        FROM messages 
-        WHERE (sender=? AND receiver=?) OR (sender=? AND receiver=?) 
-        ORDER BY timestamp ASC
-    ''', (sender, receiver, receiver, sender))
-    messages = c.fetchall()
-    conn.close()
-
-    return jsonify([
-        {"sender": m[0], "receiver": m[1], "message": m[2], "timestamp": m[3]} for m in messages
-    ])
-
+    return jsonify({"matched": False}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    from os import getenv
+    app.run(host='0.0.0.0', port=int(getenv("PORT", 5000)))
