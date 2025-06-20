@@ -187,7 +187,7 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
   <h2>💞 Chat with your match</h2>
   <div id="messages"></div>
   <div class="chat-input">
-    <input type="text" id="msgInput" placeholder="Type your message... 😊❤️🔥" />
+    <input type="text" id="msgInput" placeholder="Type your message... 😊❤️" />
     <button id="sendBtn" onclick="sendMessage()">Send</button>
   </div>
 </div>
@@ -236,6 +236,14 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
 
     document.getElementById("msgInput").value = "";
   }
+  window.addEventListener("beforeunload", () => {
+  fetch("https://instant-match.onrender.com/leave", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: yourName })
+  });
+});
+
 </script>
 
 </body>

@@ -370,6 +370,23 @@ def check_match():
         return jsonify(active_rooms[username])
 
     return jsonify({"matched": False}), 404
+@app.route('/leave', methods=['POST'])
+def leave_chat():
+    data = request.json
+    username = data.get('username')
+    
+    # Remove user from any room they're part of
+    to_delete = []
+    for room, users in active_rooms.items():
+        if username in users:
+            to_delete.append(room)
+
+    for room in to_delete:
+        del active_rooms[room]
+    
+    print(f"❌ {username} has left the chat. Room(s) cleaned.")
+    return {"success": True}
+
 @app.route('/send', methods=['POST'])
 def send():
     data = request.get_json()
