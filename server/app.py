@@ -292,6 +292,15 @@
 #     app.run(host="0.0.0.0", port=int(getenv("PORT", 5000)))
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import pusher
+
+pusher_client = pusher.Pusher(
+  app_id='2010934',
+  key='8685cf11979ffbaa7ea6',
+  secret='34b43b122f64f4dad71c',
+  cluster='ap2',
+  ssl=True
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -361,6 +370,21 @@ def check_match():
         return jsonify(active_rooms[username])
 
     return jsonify({"matched": False}), 404
+@app.route('/send', methods=['POST'])
+def send():
+    data = request.get_json()
+    sender = data.get('sender')
+    receiver = data.get('receiver')
+    message = data.get('message')
+
+    room = get_room_name(sender, receiver)
+
+    pusher_client.trigger(room, 'new_message', {
+        'sender': sender,
+        'message': message
+    })
+
+    return {"success": True}
 
 if __name__ == '__main__':
     from os import getenv
