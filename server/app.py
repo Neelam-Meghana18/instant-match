@@ -374,21 +374,19 @@ def check_match():
 @app.route('/leave', methods=['POST'])
 def leave_chat():
     data = request.json
-    username = data.get('username')
+    username = data.get('username', '').strip()
 
-    if not username:
-        return {"error": "Username required"}, 400
-
-    # 🧹 Remove from waiting_users
-    global waiting_users
-    waiting_users = [u for u in waiting_users if u['username'] != username]
-
-    # 🧹 Remove from active_rooms
+    # Remove from active_rooms
     if username in active_rooms:
         del active_rooms[username]
 
-    print(f"❌ {username} has left. Removed from waiting_users & active_rooms.")
+    # ✅ Remove from waiting_users
+    global waiting_users
+    waiting_users = [user for user in waiting_users if user['username'] != username]
+
+    print(f"❌ {username} has left the chat. Cleaned up.")
     return {"success": True}
+
 
 
 @app.route('/send', methods=['POST'])
