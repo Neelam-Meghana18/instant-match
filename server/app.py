@@ -361,6 +361,7 @@ def match():
     print(f"⏳ {username} added to waiting_users")
     return jsonify({"matched": False})
 
+
 @app.route('/check-match', methods=['GET'])
 def check_match():
     username = request.args.get('name', '').strip()
@@ -374,18 +375,21 @@ def check_match():
 def leave_chat():
     data = request.json
     username = data.get('username')
-    
-    # Remove user from any room they're part of
-    to_delete = []
-    for room, users in active_rooms.items():
-        if username in users:
-            to_delete.append(room)
 
-    for room in to_delete:
-        del active_rooms[room]
-    
-    print(f"❌ {username} has left the chat. Room(s) cleaned.")
+    if not username:
+        return {"error": "Username required"}, 400
+
+    # 🧹 Remove from waiting_users
+    global waiting_users
+    waiting_users = [u for u in waiting_users if u['username'] != username]
+
+    # 🧹 Remove from active_rooms
+    if username in active_rooms:
+        del active_rooms[username]
+
+    print(f"❌ {username} has left. Removed from waiting_users & active_rooms.")
     return {"success": True}
+
 
 @app.route('/send', methods=['POST'])
 def send():
