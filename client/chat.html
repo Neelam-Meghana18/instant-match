@@ -180,6 +180,8 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
       align-items: center;
     }
   </style>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
 </head>
 <body>
 
@@ -187,9 +189,11 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
   <h2>💞 Chat with your match</h2>
   <div id="messages"></div>
   <div class="chat-input">
-    <input type="text" id="msgInput" placeholder="Type your message... 😊❤️" />
-    <button id="sendBtn" onclick="sendMessage()">Send</button>
-  </div>
+  <button id="emojiToggle" style="font-size: 22px; background: none; border: none; cursor: pointer;">😊</button>
+  <input type="text" id="msgInput" placeholder="Type your message... 😊❤️" />
+  <button id="sendBtn" onclick="sendMessage()">Send</button>
+</div>
+
 </div>
 
 <script>
@@ -243,6 +247,26 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
     body: JSON.stringify({ username: yourName })
   });
 });
+  const emojiToggle = document.getElementById("emojiToggle");
+  const emojiPicker = document.getElementById("emojiPicker");
+  const msgInput = document.getElementById("msgInput");
+
+  // Toggle picker
+  emojiToggle.addEventListener("click", () => {
+    emojiPicker.style.display = emojiPicker.style.display === "none" ? "block" : "none";
+  });
+
+  // Insert emoji into input
+  emojiPicker.addEventListener("emoji-click", event => {
+    msgInput.value += event.detail.unicode;
+  });
+
+  // Optional: hide picker when user clicks outside
+  document.addEventListener("click", (e) => {
+    if (!emojiPicker.contains(e.target) && e.target.id !== "emojiToggle") {
+      emojiPicker.style.display = "none";
+    }
+  });
 
 </script>
 
