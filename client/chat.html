@@ -1,80 +1,12 @@
-<!-- <!DOCTYPE html>
-<html>
-<head>
-  <title>Chat Room</title>
-  <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
-  <style>
-    body { font-family: Arial; background: #f2f2f2; }
-    #chatBox { max-width: 600px; margin: 50px auto; background: #fff; padding: 20px; border-radius: 10px; }
-    #messages { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
-    .msg { margin: 5px 0; }
-    .me { text-align: right; color: green; }
-    .them { text-align: left; color: blue; }
-  </style>
-</head>
-<body>
-
-<div id="chatBox">
-  <h2>💬 Chat with your match</h2>
-  <div id="messages"></div>
-  <input type="text" id="msgInput" placeholder="Type a message..." />
-  <button onclick="sendMessage()">Send</button>
-</div>
-
-<script>
-  const yourName = localStorage.getItem("yourName");
-  const matchedName = localStorage.getItem("matchedName");
-
-  const channelName = [yourName, matchedName].sort().join("_");
-
-  // Connect to Pusher
-const pusher = new Pusher('8685cf11979ffbaa7ea6', {
-  cluster: 'ap2',
-  encrypted: true
-});
-
-
-  const channel = pusher.subscribe(channelName);
-
-  channel.bind('new_message', function(data) {
-    const isMine = data.sender === yourName;
-    const msgDiv = document.createElement("div");
-    msgDiv.className = "msg " + (isMine ? "me" : "them");
-    msgDiv.innerText = `${data.sender}: ${data.message}`;
-    document.getElementById("messages").appendChild(msgDiv);
-  });
-
-  function sendMessage() {
-    const message = document.getElementById("msgInput").value;
-    if (!message) return;
-
-    fetch("https://instant-match.onrender.com/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender: yourName,
-        receiver: matchedName,
-        message
-      })
-    });
-
-    document.getElementById("msgInput").value = "";
-  }
-</script>
-<script src="https://js.pusher.com/7.2/pusher.min.js"></script>
-
-</body>
-</html> -->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Instant Match Chat 💬</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://js.pusher.com/8.2/pusher.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 
   <style>
     * {
@@ -106,6 +38,7 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
       width: 90%;
       max-width: 600px;
+      position: relative;
     }
 
     h2 {
@@ -122,6 +55,9 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
       padding: 15px;
       background-color: #fff;
       margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .msg {
@@ -130,10 +66,11 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
       border-radius: 15px;
       max-width: 70%;
       animation: fadeIn 0.4s ease;
+      word-wrap: break-word;
     }
 
     .me {
-      background: #6c63ff;
+      background: #2979ff;
       color: white;
       margin-left: auto;
       text-align: right;
@@ -151,8 +88,14 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
       to { opacity: 1; transform: translateY(0); }
     }
 
+    .chat-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     #msgInput {
-      width: calc(100% - 90px);
+      flex: 1;
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 10px;
@@ -162,249 +105,147 @@ const pusher = new Pusher('8685cf11979ffbaa7ea6', {
 
     #sendBtn {
       padding: 12px 16px;
-      background-color: #6c63ff;
+      background-color: #2979ff;
       border: none;
       color: white;
       font-weight: 600;
       border-radius: 10px;
-      margin-left: 10px;
       cursor: pointer;
     }
 
     #sendBtn:hover {
-      background-color: #574fd6;
+      background-color: #1c54b2;
     }
 
-    .chat-input {
-      display: flex;
-      align-items: center;
-    }
-    <style>
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: "Segoe UI", sans-serif;
-    background-color: #f2f2f2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  #chatBox {
-    background-color: white;
-    width: 90%;
-    max-width: 600px;
-    height: 90vh;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  #chatBox h2 {
-    margin: 0;
-    padding: 15px;
-    background-color: #4caf50;
-    color: white;
-    font-size: 1.5em;
-    text-align: center;
-  }
-
-  #messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background-color: #fafafa;
-  }
-
-  .chat-input {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background-color: #fff;
-    border-top: 1px solid #ddd;
-  }
-
-  .chat-input input {
-    flex: 1;
-    padding: 12px;
-    font-size: 1em;
-    border: 1px solid #ccc;
-    border-radius: 25px;
-    margin: 0 10px;
-    outline: none;
-  }
-
-  .chat-input button {
-    padding: 10px 16px;
-    font-size: 1em;
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-
-  .chat-input button:hover {
-    background-color: #45a049;
-  }
-
-  /* Emoji toggle button (😊) */
-  #emojiToggle {
-    font-size: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin-right: 5px;
-  }
-
-  /* Make emoji picker responsive */
-  emoji-picker {
-    max-height: 200px;
-    overflow-y: scroll;
-    z-index: 999;
-  }
-
-  @media (max-width: 768px) {
-    #chatBox {
-      width: 100%;
-      height: 100vh;
-      border-radius: 0;
+    #emojiToggle {
+      font-size: 22px;
+      background: none;
+      border: none;
+      cursor: pointer;
     }
 
-    #chatBox h2 {
-      font-size: 1.2em;
-      padding: 10px;
+    emoji-picker {
+      position: absolute;
+      bottom: 80px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
     }
 
-    .chat-input input {
-      font-size: 0.95em;
+    @media (max-width: 768px) {
+      #chatBox {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      h2 {
+        font-size: 1.2em;
+        padding: 10px;
+      }
+
+      .chat-input input,
+      .chat-input button {
+        font-size: 0.95em;
+      }
     }
 
-    .chat-input button {
-      font-size: 0.95em;
-    }
-  }
+    @media (max-width: 480px) {
+      .chat-input input {
+        padding: 10px;
+        font-size: 0.9em;
+      }
 
-  @media (max-width: 480px) {
-    .chat-input input {
-      padding: 10px;
-      font-size: 0.9em;
+      .chat-input button {
+        padding: 8px 12px;
+        font-size: 0.9em;
+      }
     }
-
-    .chat-input button {
-      padding: 8px 12px;
-      font-size: 0.9em;
-    }
-  }
-</style>
-
   </style>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
-
 </head>
+
 <body>
-<div id="chatBox">
-  <h2>💞 Chat with your match</h2>
-  <div id="messages"></div>
+  <div id="chatBox">
+    <h2>💞 Chat with your match</h2>
+    <div id="messages"></div>
 
-  <div class="chat-input">
-    <!-- Emoji Toggle Button -->
-    <button id="emojiToggle" style="font-size: 22px; background: none; border: none; cursor: pointer;">😊</button>
+    <div class="chat-input">
+      <button id="emojiToggle">😊</button>
+      <input type="text" id="msgInput" placeholder="Type your message..." />
+      <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
 
-    <!-- Message Input -->
-    <input type="text" id="msgInput" placeholder="Type your message... 😊❤️" />
-
-    <!-- Send Button -->
-    <button id="sendBtn" onclick="sendMessage()">Send</button>
+    <emoji-picker id="emojiPicker"></emoji-picker>
   </div>
 
-  <!-- Emoji Picker (initially hidden) -->
-  <div id="emojiPicker" style="display: none; position: absolute; background: #fff; border: 1px solid #ccc; padding: 5px; border-radius: 6px;">
-    😀 😃 😄 😁 😆 😅 😂 😊 😍 🥰 😘 😗 😙 😚 🤗 🤔 😐 😑 🙄 😶 🙃 🤪 😇 😎 🥳 😏 😒 😞 😔 😟 😢 😭
-  </div>
-</div>
+  <script>
+    const yourName = localStorage.getItem("yourName");
+    const matchedName = localStorage.getItem("matchedName");
+    const messagesDiv = document.getElementById("messages");
 
+    if (!yourName || !matchedName) {
+      alert("Missing chat info. Please restart from the beginning.");
+      location.href = "index.html";
+    }
 
-<script>
-  const yourName = localStorage.getItem("yourName");
-  const matchedName = localStorage.getItem("matchedName");
-  const messagesDiv = document.getElementById("messages");
+    const channelName = [yourName, matchedName].sort().join("_");
 
-  if (!yourName || !matchedName) {
-    alert("Missing chat info. Please restart from the beginning.");
-    location.href = "index.html";
-  }
-
-  const channelName = [yourName, matchedName].sort().join("_");
-
-  const pusher = new Pusher('8685cf11979ffbaa7ea6', {
-    cluster: 'ap2',
-    encrypted: true
-  });
-
-  const channel = pusher.subscribe(channelName);
-
-  channel.bind('new_message', function (data) {
-    const isMine = data.sender === yourName;
-    const msgDiv = document.createElement("div");
-    msgDiv.className = "msg " + (isMine ? "me" : "them");
-    msgDiv.innerText = `${data.sender}: ${data.message}`;
-    messagesDiv.appendChild(msgDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  });
-
-  function sendMessage() {
-    const message = document.getElementById("msgInput").value.trim();
-    if (!message) return;
-
-    fetch("https://instant-match.onrender.com/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender: yourName,
-        receiver: matchedName,
-        message
-      })
+    const pusher = new Pusher('8685cf11979ffbaa7ea6', {
+      cluster: 'ap2',
+      encrypted: true
     });
 
-    document.getElementById("msgInput").value = "";
-  }
-  window.addEventListener("beforeunload", () => {
-  fetch("https://instant-match.onrender.com/leave", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: yourName })
-  });
-});
-  const emojiToggle = document.getElementById("emojiToggle");
-  const emojiPicker = document.getElementById("emojiPicker");
-  const msgInput = document.getElementById("msgInput");
+    const channel = pusher.subscribe(channelName);
 
-  // Toggle picker
-  emojiToggle.addEventListener("click", () => {
-    emojiPicker.style.display = emojiPicker.style.display === "none" ? "block" : "none";
-  });
+    channel.bind('new_message', function (data) {
+      const isMine = data.sender === yourName;
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "msg " + (isMine ? "me" : "them");
+      msgDiv.innerText = `${data.sender}: ${data.message}`;
+      messagesDiv.appendChild(msgDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
 
-  // Insert emoji into input
-  emojiPicker.addEventListener("emoji-click", event => {
-    msgInput.value += event.detail.unicode;
-  });
+    function sendMessage() {
+      const message = document.getElementById("msgInput").value.trim();
+      if (!message) return;
 
-  // Optional: hide picker when user clicks outside
-  document.addEventListener("click", (e) => {
-    if (!emojiPicker.contains(e.target) && e.target.id !== "emojiToggle") {
-      emojiPicker.style.display = "none";
+      fetch("https://instant-match.onrender.com/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: yourName,
+          receiver: matchedName,
+          message
+        })
+      });
+
+      document.getElementById("msgInput").value = "";
     }
-  });
 
-</script>
+    window.addEventListener("beforeunload", () => {
+      fetch("https://instant-match.onrender.com/leave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: yourName })
+      });
+    });
 
+    document.addEventListener("DOMContentLoaded", () => {
+      const emojiToggle = document.getElementById("emojiToggle");
+      const emojiPicker = document.getElementById("emojiPicker");
+      const msgInput = document.getElementById("msgInput");
+
+      emojiToggle.addEventListener("click", () => {
+        emojiPicker.style.display = emojiPicker.style.display === "none" ? "block" : "none";
+      });
+
+      emojiPicker.addEventListener("emoji-click", (event) => {
+        msgInput.value += event.detail.unicode;
+        msgInput.focus();
+      });
+    });
+  </script>
 </body>
 </html>
